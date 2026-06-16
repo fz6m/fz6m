@@ -1,7 +1,7 @@
 # About me
 
-Hi, I am **Sakina**. 
+Hi, I am **Kanamio**.
 
- - 🍰 I’m a web developer who follow my heart
- - 🌈 I’m current learning `React`, `Vue.js`
- - 🌸 Programming with love
+- 🍰 Software engineer focused on AI, frontend infrastructure, and developer productivity
+- 🌈 I build frontend architecture and enterprise software systems, while I follow my heart
+- 🌸 Programming with love
