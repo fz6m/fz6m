@@ -87,6 +87,7 @@
     </div>
     <label>Width <input id="width" type="number" min="280" max="1200" value="390"> px</label>
     <input id="range" type="range" min="280" max="1200" value="390" aria-label="Viewport width">
+    <label>Side space <input id="side-space" type="number" min="0" max="80" value="41"> px</label>
     <label>Theme
       <select id="theme">
         <option value="auto">System</option>
@@ -108,6 +109,7 @@
     const frame = document.getElementById("preview");
     const widthInput = document.getElementById("width");
     const rangeInput = document.getElementById("range");
+    const sideSpaceInput = document.getElementById("side-space");
     const themeInput = document.getElementById("theme");
     const variant = document.getElementById("variant");
     let contentObserver;
@@ -130,10 +132,26 @@
       widthInput.value = width;
       rangeInput.value = width;
       frame.style.width = `${width}px`;
-      if (width <= preview.stackBreakpoint) {
-        variant.textContent = "Mobile artwork, two button rows";
-      } else {
-        variant.textContent = width <= preview.breakpoint ? "Mobile artwork" : "Desktop artwork";
+      updateLayoutInfo();
+    }
+
+    function updateLayoutInfo() {
+      const content = frame.contentDocument?.querySelector("main");
+      if (!content) return;
+      const buttons = Array.from(content.querySelectorAll("img")).slice(1);
+      const rows = new Set(buttons.map(image => Math.round(image.getBoundingClientRect().top))).size;
+      const available = Math.round(content.getBoundingClientRect().width);
+      const artwork = Number(widthInput.value) <= preview.breakpoint ? "Mobile" : "Desktop";
+      const rowLabel = rows === 1 ? "button row" : "button rows";
+      variant.textContent = `${artwork} artwork, ${available} px available, ${rows} ${rowLabel}`;
+    }
+
+    function setSideSpace() {
+      const space = Math.max(0, Math.min(80, Number(sideSpaceInput.value) || 0));
+      sideSpaceInput.value = space;
+      if (frame.contentDocument?.body) {
+        frame.contentDocument.body.style.paddingInline = `${space}px`;
+        updateLayoutInfo();
       }
     }
 
@@ -145,15 +163,17 @@
     }
 
     function loadPreview() {
-      frame.srcdoc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${frameStyle}</style></head><body><main>${preview.html}</main></body></html>`;
+      frame.srcdoc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${frameStyle}</style></head><body style="padding-inline: ${Number(sideSpaceInput.value)}px"><main>${preview.html}</main></body></html>`;
     }
 
     frame.addEventListener("load", () => {
       setTheme();
+      setSideSpace();
       if (contentObserver) contentObserver.disconnect();
       const content = frame.contentDocument.querySelector("main");
       contentObserver = new ResizeObserver(() => {
         frame.style.height = `${Math.ceil(content.getBoundingClientRect().height) + 48}px`;
+        updateLayoutInfo();
       });
       contentObserver.observe(content);
     });
@@ -162,6 +182,7 @@
     });
     widthInput.addEventListener("change", () => setWidth(widthInput.value));
     rangeInput.addEventListener("input", () => setWidth(rangeInput.value));
+    sideSpaceInput.addEventListener("change", setSideSpace);
     themeInput.addEventListener("change", setTheme);
     document.getElementById("reload").addEventListener("click", () => window.location.reload());
     setWidth(390);

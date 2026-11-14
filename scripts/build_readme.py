@@ -65,7 +65,7 @@ LINKS = (
     ("website", "kanamio.dev", "https://kanamio.dev/"),
     ("x", "kanamiox", "https://x.com/kanamiox"),
 )
-WIDTH, HEIGHT = 900, 256
+WIDTH, HEIGHT = 900, 264
 PADDING, CORNER_RADIUS = 40, 32
 AVATAR_SIZE, AVATAR_BORDER = 160, 4
 MOBILE_WIDTH, MOBILE_BREAKPOINT = 360, 640
@@ -363,17 +363,20 @@ def button(kind: str, label: str, mobile: bool = False, stacked: bool = False) -
     # Full-row canvases center each capsule when the narrow layout wraps.
     height, size, icon_size, padding, icon_gap = BUTTON_HEIGHT, BUTTON_SIZE, BUTTON_ICON_SIZE, 17, 9
     if mobile:
-        size, icon_size, padding, icon_gap = 15, 15, 22, 7
+        size, icon_size, padding, icon_gap = 15, 15, 18, 7
     weight = 700
     text_widths = [measure(value, size, weight) for _, value, _ in LINKS]
     pill_width = math.ceil(2 * padding + icon_size + icon_gap + max(text_widths))
     if stacked:
         width = max(240, pill_width)
         pill_x = (width - pill_width) / 2
+    elif mobile:
+        # Symmetric space centers each capsule when the available width forces a new row.
+        width = pill_width + 8
+        pill_x = 4
     else:
-        gap = 24 if mobile else BUTTON_GAP
-        left_gap = 0 if kind == LINKS[0][0] else gap / 2
-        right_gap = 0 if kind == LINKS[-1][0] else gap / 2
+        left_gap = 0 if kind == LINKS[0][0] else BUTTON_GAP / 2
+        right_gap = 0 if kind == LINKS[-1][0] else BUTTON_GAP / 2
         width = int(pill_width + left_gap + right_gap)
         pill_x = left_gap
     top = 8
