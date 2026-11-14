@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>README preview</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f6f8fa;
+      --surface: #ffffff;
+      --text: #1f2328;
+      --border: #d1d9e0;
+      --accent: #725292;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #010409;
+      --surface: #0d1117;
+      --text: #f0f6fc;
+      --border: #3d444d;
+      --accent: #c8a5f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --page: #010409;
+        --surface: #0d1117;
+        --text: #f0f6fc;
+        --border: #3d444d;
+        --accent: #c8a5f0;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font: 14px/1.5 "Figtree", system-ui, sans-serif;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px 20px;
+      padding: 18px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    h1 { margin: 0 12px 0 0; font-size: 17px; font-weight: 650; }
+    label, .presets { display: inline-flex; align-items: center; gap: 8px; }
+    button, select, input[type="number"] {
+      min-height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      color: inherit;
+      background: var(--surface);
+      font: inherit;
+    }
+    button { cursor: pointer; }
+    button:hover { border-color: var(--accent); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    input[type="number"] { width: 78px; }
+    input[type="range"] { width: 160px; accent-color: var(--accent); }
+    output { font-size: 13px; }
+    .stage { overflow: auto; padding: 24px; }
+    .frame-wrap { width: max-content; margin: 0 auto; }
+    iframe {
+      display: block;
+      box-sizing: content-box;
+      width: 390px;
+      height: 460px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>README preview</h1>
+    <div class="presets" aria-label="Viewport presets">
+      <button type="button" data-width="320">320 px</button>
+      <button type="button" data-width="390">Phone</button>
+      <button type="button" data-width="1028">Desktop</button>
+    </div>
+    <label>Width <input id="width" type="number" min="280" max="1200" value="390"> px</label>
+    <input id="range" type="range" min="280" max="1200" value="390" aria-label="Viewport width">
+    <label>Theme
+      <select id="theme">
+        <option value="auto">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </label>
+    <button id="reload" type="button">Reload</button>
+    <output id="variant" aria-live="polite"></output>
+  </header>
+  <main class="stage">
+    <div class="frame-wrap">
+      <iframe id="preview" title="Generated README at the selected viewport width"></iframe>
+    </div>
+  </main>
+  <script src="readme.js"></script>
+  <script>
+    const preview = window.readmePreview;
+    const frame = document.getElementById("preview");
+    const widthInput = document.getElementById("width");
+    const rangeInput = document.getElementById("range");
+    const themeInput = document.getElementById("theme");
+    const variant = document.getElementById("variant");
+    let contentObserver;
+
+    const frameStyle = `
+      :root { color-scheme: light; background: #fff; color: #1f2328; }
+      :root[data-theme="dark"] { color-scheme: dark; background: #0d1117; color: #f0f6fc; }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) { color-scheme: dark; background: #0d1117; color: #f0f6fc; }
+      }
+      body { margin: 0; padding: 24px; font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      main { max-width: 900px; margin: 0 auto; }
+      p { margin: 0; }
+      img { max-width: 100%; vertical-align: middle; }
+      a { color: inherit; text-decoration: none; }
+    `;
+
+    function setWidth(value) {
+      const width = Math.max(280, Math.min(1200, Number(value) || 390));
+      widthInput.value = width;
+      rangeInput.value = width;
+      frame.style.width = `${width}px`;
+      if (width <= preview.stackBreakpoint) {
+        variant.textContent = "Mobile artwork, two button rows";
+      } else {
+        variant.textContent = width <= preview.breakpoint ? "Mobile artwork" : "Desktop artwork";
+      }
+    }
+
+    function setTheme() {
+      document.documentElement.dataset.theme = themeInput.value;
+      if (frame.contentDocument) {
+        frame.contentDocument.documentElement.dataset.theme = themeInput.value;
+      }
+    }
+
+    function loadPreview() {
+      frame.srcdoc = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${frameStyle}</style></head><body><main>${preview.html}</main></body></html>`;
+    }
+
+    frame.addEventListener("load", () => {
+      setTheme();
+      if (contentObserver) contentObserver.disconnect();
+      const content = frame.contentDocument.querySelector("main");
+      contentObserver = new ResizeObserver(() => {
+        frame.style.height = `${Math.ceil(content.getBoundingClientRect().height) + 48}px`;
+      });
+      contentObserver.observe(content);
+    });
+    document.querySelectorAll("[data-width]").forEach(button => {
+      button.addEventListener("click", () => setWidth(button.dataset.width));
+    });
+    widthInput.addEventListener("change", () => setWidth(widthInput.value));
+    rangeInput.addEventListener("input", () => setWidth(rangeInput.value));
+    themeInput.addEventListener("change", setTheme);
+    document.getElementById("reload").addEventListener("click", () => window.location.reload());
+    setWidth(390);
+    loadPreview();
+  </script>
+</body>
+</html>

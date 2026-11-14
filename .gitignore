@@ -1,0 +1,5 @@
+/.venv/
+/assets/avatar.webp
+/assets/fonts/*.ttf
+/assets/emoji/*.svg
+/scripts/__pycache__/
