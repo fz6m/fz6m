@@ -385,10 +385,12 @@ def button(kind: str, label: str, mobile: bool = False, stacked: bool = False) -
     text_y = top + baseline(0, height, size, weight)
     icon_y = top + (height - icon_size) / 2
     icon = ASSETS / "icons" / ("globe.svg" if kind == "website" else "x.svg")
+    # Balance the full-bleed X mark with the globe's internal padding.
+    icon_inset = icon_size * 0.1 if kind == "x" else 0
     body = (
         f'<rect x="{pill_x + 0.5:g}" y="{top + 0.5}" width="{pill_width - 1}" height="{height - 1}" '
         f'rx="{(height - 1) / 2}" fill="#FFFFFF" stroke="{RULE}" stroke-width="1"/>\n'
-        + inline_svg(icon, icon_x, icon_y, icon_size) + "\n"
+        + inline_svg(icon, icon_x + icon_inset, icon_y + icon_inset, icon_size - 2 * icon_inset) + "\n"
         + f'<g transform="translate({icon_x + icon_size + icon_gap:g} {text_y:g})">{outline}</g>'
     )
     return svg(width, height + top, label, f"Open {label}", body)
